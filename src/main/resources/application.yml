@@ -1,0 +1,85 @@
+spring:
+  application:
+    name: customer-poc
+
+  datasource:
+    # [DEFECT-001] 보안: DB 접속 정보가 평문으로 하드코딩됨
+    # - 환경 변수 또는 외부 설정으로 분리 필요
+    # - 비밀번호 평문 노출 위험 (아래 union.security.jwt.secret 도 동일)
+    url: jdbc:h2:mem:customerdb
+    username: admin
+    password: customer1234!
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    # [DEFECT-002] 운영 환경 부적합: show-sql 운영 환경에서 true
+    # - 운영 로그 비대화 및 성능 저하 유발
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  h2:
+    console:
+      # [DEFECT-003] 보안: H2 콘솔이 운영 프로파일에서도 활성화됨
+      # - 운영 환경에서 H2 콘솔 노출 시 DB 직접 접근 가능
+      enabled: true
+      path: /h2-console
+
+server:
+  port: 8080
+
+# ---------------------------------------------------------------------------
+# Union Framework 설정 (union-starter)
+# ---------------------------------------------------------------------------
+union:
+  web:
+    trace-header: X-Trace-Id
+    logging:
+      enabled: true
+      exclude-paths: [/actuator/**, /h2-console/**]
+    response-wrapping:
+      enabled: true
+    cors:
+      enabled: true
+      allowed-origins: ["*"]
+  security:
+    enabled: true
+    jwt:
+      # [DEFECT-001] 과 동일 — 서명 키 평문 하드코딩 (운영에서는 환경 변수/시크릿 매니저에서 주입)
+      secret: customer-poc-jwt-signing-secret-key-at-least-32-bytes
+      access-token-expiry: 1h
+      refresh-token-expiry: 7d
+    permit-all:
+      - /api/auth/login
+      - /api/auth/refresh
+      - /h2-console/**
+      - /error
+
+# 운영자 계정 (비밀번호는 BCrypt 해시) — admin / admin1234, operator / operator1234
+app:
+  auth:
+    operators:
+      - id: "1"
+        username: admin
+        password-hash: "$2y$10$x90o2O3sC.hIZQU27S073eedReoZTNHgpLr/xBnpkK6zIW2Exc1c."
+        roles: [ADMIN, OPERATOR]
+      - id: "2"
+        username: operator
+        password-hash: "$2y$10$HP6l6dZeUSeO6qw75zQas.Dbt8obmZvgIyHwbGXuPst5E68J4DD8e"
+        roles: [OPERATOR]
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] [%X{traceId:-}] %-5level %logger{36} - %msg%n"
+  level:
+    root: INFO
+    union.request: INFO
+    # [DEFECT-004] 보안/개인정보: SQL 바인딩 파라미터까지 TRACE 출력
+    # - 주민등록번호, 휴대전화번호 등 민감 개인정보가 로그로 유출됨
+    # - 개인정보보호법 위반 소지
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

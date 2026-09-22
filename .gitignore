@@ -1,0 +1,12 @@
+target/
+build/
+.gradle/
+.idea/
+*.iml
+.DS_Store
+.metadata/
+.settings/
+.classpath
+.project
+.vscode/
+.coa
