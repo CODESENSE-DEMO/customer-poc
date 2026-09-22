@@ -14,6 +14,7 @@ PoC 시나리오 A (샘플 코드셋 기반 검증)에서 AI 코드 점검 능�
 
 - Java 17 + Spring Boot 3.2 + **Union Framework 1.0** 기반 보험 고객(Customer) 관리 / 동의(Consent) / KYC / 통계
 - 의도적으로 삽입된 25개 결함 + 정상 코드
+- 오탐(False Positive) 측정용 정상 코드 모듈: 고객 상담 메모(`customer/memo`, `/api/customers/{customerNo}/memos`)
 - Controller / Service / Repository / Domain / DTO / ErrorCode / Exception 계층 (`spec` / `impl` 패키지 분리)
 
 ### 프레임워크가 담당하는 것
