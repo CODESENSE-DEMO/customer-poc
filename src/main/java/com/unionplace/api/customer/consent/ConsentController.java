@@ -3,6 +3,7 @@ package com.unionplace.api.customer.consent;
 import com.unionplace.customer.consent.spec.ConsentRequest;
 import com.unionplace.customer.consent.spec.ConsentResponse;
 import com.unionplace.customer.consent.spec.ConsentService;
+import com.unionplace.customer.consent.spec.ConsentStatusResponse;
 import com.unionplace.customer.consent.spec.ConsentSummaryResponse;
 import com.unionplace.customer.consent.spec.ConsentType;
 import jakarta.validation.Valid;
@@ -40,6 +41,11 @@ public class ConsentController {
             @PathVariable String customerNo,
             @RequestParam ConsentType type) {
         consentService.withdrawConsent(customerNo, type);
+    }
+
+    @GetMapping("/status")
+    public List<ConsentStatusResponse> getStatusByType(@RequestParam ConsentType type) {
+        return consentService.getConsentStatusByType(type);
     }
 
     @GetMapping("/count")
