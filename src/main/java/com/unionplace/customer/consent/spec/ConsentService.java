@@ -15,4 +15,6 @@ public interface ConsentService {
     long countAgreed(ConsentType consentType);
 
     ConsentSummaryResponse getConsentSummary(String customerNo);
+
+    List<ConsentStatusResponse> getConsentStatusByType(ConsentType consentType);
 }

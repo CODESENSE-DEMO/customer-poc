@@ -6,11 +6,13 @@ import com.unionplace.customer.consent.spec.ConsentRepository;
 import com.unionplace.customer.consent.spec.ConsentRequest;
 import com.unionplace.customer.consent.spec.ConsentResponse;
 import com.unionplace.customer.consent.spec.ConsentService;
+import com.unionplace.customer.consent.spec.ConsentStatusResponse;
 import com.unionplace.customer.consent.spec.ConsentSummaryResponse;
 import com.unionplace.customer.consent.spec.ConsentType;
 import com.unionplace.customer.management.spec.Customer;
 import com.unionplace.customer.management.spec.CustomerNotFoundException;
 import com.unionplace.customer.management.spec.CustomerRepository;
+import com.unionplace.customer.management.spec.CustomerStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -136,5 +138,38 @@ public class ConsentServiceImpl implements ConsentService {
                 .notRegisteredCount(notRegistered)
                 .items(items)
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ConsentStatusResponse> getConsentStatusByType(ConsentType consentType) {
+        List<Customer> customers = customerRepository.findByStatus(CustomerStatus.ACTIVE);
+        List<ConsentStatusResponse> result = new ArrayList<>(customers.size());
+
+        for (Customer customer : customers) {
+            Consent consent = consentRepository
+                    .findByCustomerNoAndConsentType(customer.getCustomerNo(), consentType)
+                    .orElse(null);
+
+            ConsentSummaryResponse.Status status;
+            if (consent == null) {
+                status = ConsentSummaryResponse.Status.NOT_REGISTERED;
+            } else if (consent.isAgreed()) {
+                status = ConsentSummaryResponse.Status.AGREED;
+            } else {
+                status = ConsentSummaryResponse.Status.WITHDRAWN;
+            }
+
+            result.add(ConsentStatusResponse.builder()
+                    .customerNo(customer.getCustomerNo())
+                    .customerName(customer.getName())
+                    .consentType(consentType)
+                    .status(status)
+                    .agreedAt(consent != null ? consent.getAgreedAt() : null)
+                    .build());
+        }
+
+        log.info("동의 현황 조회 - type={}, customers={}", consentType, result.size());
+        return result;
     }
 }
