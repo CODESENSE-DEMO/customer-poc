@@ -6,6 +6,8 @@ public interface CustomerTierService {
 
     CustomerResponse changeTier(Long customerId, TierUpdateRequest request);
 
+    TierResponse getTier(Long customerId);
+
     List<CustomerResponse> findByTier(CustomerTier tier);
 
     long countByTier(CustomerTier tier);

@@ -6,6 +6,7 @@ import com.unionplace.customer.management.spec.CustomerRepository;
 import com.unionplace.customer.management.spec.CustomerResponse;
 import com.unionplace.customer.management.spec.CustomerTier;
 import com.unionplace.customer.management.spec.CustomerTierService;
+import com.unionplace.customer.management.spec.TierResponse;
 import com.unionplace.customer.management.spec.TierUpdateRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -23,6 +26,9 @@ public class CustomerTierServiceImpl implements CustomerTierService {
     private final CustomerRepository customerRepository;
 
     private static final int NOTIFICATION_THRESHOLD_TIER_ORDINAL = 2;
+
+    /** 등급 조회 캐시 — 혜택 적용 여부 판단 시 반복 조회 부하를 줄이기 위해 메모리에 보관 */
+    private final Map<Long, CustomerTier> tierCache = new ConcurrentHashMap<>();
 
     @Override
     @Transactional
@@ -49,6 +55,19 @@ public class CustomerTierServiceImpl implements CustomerTierService {
                 + ", reason=" + request.getReason());
 
         return CustomerResponse.from(customer);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TierResponse getTier(Long customerId) {
+        CustomerTier tier = tierCache.computeIfAbsent(customerId, this::loadTier);
+        return TierResponse.of(customerId, tier);
+    }
+
+    private CustomerTier loadTier(Long customerId) {
+        return customerRepository.findById(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException("고객을 찾을 수 없습니다. id=" + customerId))
+                .getTier();
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.unionplace.api.customer.management;
 import com.unionplace.customer.management.spec.CustomerResponse;
 import com.unionplace.customer.management.spec.CustomerTier;
 import com.unionplace.customer.management.spec.CustomerTierService;
+import com.unionplace.customer.management.spec.TierResponse;
 import com.unionplace.customer.management.spec.TierUpdateRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,11 @@ public class CustomerTierController {
             @PathVariable Long id,
             @Valid @RequestBody TierUpdateRequest request) {
         return customerTierService.changeTier(id, request);
+    }
+
+    @GetMapping("/{id}/tier")
+    public TierResponse getTier(@PathVariable Long id) {
+        return customerTierService.getTier(id);
     }
 
     @GetMapping("/by-tier")
