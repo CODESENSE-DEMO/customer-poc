@@ -173,3 +173,22 @@ customer-poc/
 | CustomerTierController.changeTier, CustomerBlockController.block | API-01 | URI 에 동사 사용 (`/changeTier`, `/blockNow`) |
 | CustomerTierServiceImpl, CustomerBlockServiceImpl | LOG-02 | 문자열 연결(`+`)로 로그 메시지 구성 |
 | CustomerTierServiceImpl, CustomerBlockServiceImpl | EX-05 | `Exception` 직접 catch |
+
+## 정상 코드셋 — 오탐(False Positive) 측정용
+
+`customer/memo` (고객 상담 메모) 모듈은 **의도적 결함을 포함하지 않는 정상 코드**로, AI 점검 도구의 오탐률 측정에 사용한다.
+결함 정답셋과 대조 시 이 모듈에서 보고되는 지적은 원칙적으로 오탐으로 집계한다.
+
+| 파일 | 비고 |
+|---|---|
+| `customer/memo/spec/CustomerMemo.java` | `SoftDeletableEntity` 상속 — 상담 이력 소프트 삭제 (FW-03) |
+| `customer/memo/spec/MemoCategory.java` | 메모 분류 enum |
+| `customer/memo/spec/CustomerMemoErrorCode.java` | 도메인 에러 코드 `MEMO_001 ~ MEMO_003` (EX-01) |
+| `customer/memo/spec/CustomerMemoNotFoundException.java` | `EntityNotFoundException` 상속 (EX-03) |
+| `customer/memo/spec/CustomerMemoRepository.java` | 파생 쿼리만 사용 — 문자열 결합 없음 |
+| `customer/memo/spec/CustomerMemo{Create,Update}Request.java` | Bean Validation 적용 (API-06) |
+| `customer/memo/spec/CustomerMemoResponse.java` | 엔티티 직접 노출 없음, PII 미포함 (JV-04) |
+| `customer/memo/spec/CustomerMemoService.java` | 서비스 인터페이스 (`spec`) |
+| `customer/memo/impl/CustomerMemoServiceImpl.java` | 조회 `@Transactional(readOnly = true)`, 변경 `@Transactional`, 로그에 식별자만 기록 (LOG-05) |
+| `api/customer/memo/CustomerMemoController.java` | 명사형 URI + 표준 상태코드, 삭제는 `@PreAuthorize("hasRole('ADMIN')")` (API-01, API-03) |
+| `src/test/java/com/unionplace/CustomerMemoApiTests.java` | 등록·조회·수정·삭제·권한·소유 검증 테스트 7건 |
