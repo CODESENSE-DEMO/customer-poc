@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>고객 관리 — 고객 목록</title>
+  <script src="js/api.js"></script>
+</head>
+<body>
+  <h1>고객 목록</h1>
+  <button type="button" onclick="logout()">로그아웃</button>
+  <form id="search-form">
+    <label>이름 <input name="name"></label>
+    <label>상태
+      <select name="status">
+        <option value="">전체</option>
+        <option value="ACTIVE">ACTIVE</option>
+        <option value="DORMANT">DORMANT</option>
+        <option value="WITHDRAWN">WITHDRAWN</option>
+      </select>
+    </label>
+    <button type="submit">검색</button>
+  </form>
+  <table>
+    <thead>
+      <tr><th>고객번호</th><th>이름</th><th>이메일</th><th>상태</th><th>등급</th></tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <p id="error" role="alert"></p>
+  <script>
+    requireLogin();
+
+    async function load(params) {
+      const query = new URLSearchParams(
+        Object.entries(params).filter(([, value]) => value)
+      ).toString();
+      const path = query ? `/api/customers/search?${query}` : "/api/customers";
+      const rows = document.getElementById("rows");
+      rows.replaceChildren();
+      try {
+        for (const customer of await api(path)) {
+          const row = document.createElement("tr");
+          const link = document.createElement("a");
+          link.href = `customer.html?id=${encodeURIComponent(customer.id)}`;
+          link.textContent = customer.customerNo;
+          cell(row, "").appendChild(link);
+          cell(row, customer.name);
+          cell(row, customer.email);
+          cell(row, customer.status);
+          cell(row, customer.tier);
+          rows.appendChild(row);
+        }
+      } catch (error) {
+        document.getElementById("error").textContent = error.message;
+      }
+    }
+
+    document.getElementById("search-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const form = new FormData(event.target);
+      load({ name: form.get("name"), status: form.get("status") });
+    });
+    load({});
+  </script>
+</body>
+</html>

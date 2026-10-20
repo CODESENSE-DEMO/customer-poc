@@ -26,6 +26,19 @@ PoC 시나리오 A (샘플 코드셋 기반 검증)에서 AI 코드 점검 능�
 | 영속성 | `BaseEntity`(생성/수정 일시·작성자 자동 기록) | 엔티티가 `io.union.data.entity.BaseEntity` 상속 |
 | 인증/인가 | `JwtTokenProvider`, `JwtAuthenticationFilter`, `@CurrentUser`, `@PreAuthorize` | `/api/auth/login` 에서 토큰 발급 |
 
+## 화면 (Frontend)
+
+`src/main/resources/static/` 의 정적 화면 3종.
+
+| 화면 | 파일 | 사용하는 API |
+|------|------|--------------|
+| 로그인 | `index.html` | `POST /api/auth/login` |
+| 고객 목록·검색 | `customers.html` | `GET /api/customers`, `GET /api/customers/search` |
+| 고객 상세·연락처 수정 | `customer.html` | `GET /api/customers/{id}`, `PUT /api/customers/{id}/contact` |
+
+공통 스크립트 `js/api.js` 가 로그인 토큰을 세션에 보관하고 `Authorization: Bearer` 로 붙인다.
+화면은 결함 정답셋(`docs/DEFECTS.md`) 대상이 아니다.
+
 ## 결함 정답셋
 
 `docs/DEFECTS.md` 참고

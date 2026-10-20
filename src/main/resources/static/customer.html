@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>고객 관리 — 고객 상세</title>
+  <script src="js/api.js"></script>
+</head>
+<body>
+  <h1>고객 상세</h1>
+  <a href="customers.html">목록으로</a>
+  <dl id="detail"></dl>
+  <h2>연락처 수정</h2>
+  <form id="contact-form">
+    <label>이메일 <input name="email" type="email"></label>
+    <label>전화번호 <input name="phoneNumber"></label>
+    <button type="submit">저장</button>
+  </form>
+  <p id="message" role="status"></p>
+  <script>
+    requireLogin();
+    const id = new URLSearchParams(location.search).get("id");
+    const fields = [
+      ["고객번호", "customerNo"], ["이름", "name"], ["이메일", "email"],
+      ["전화번호", "phoneNumber"], ["생년월일", "birthDate"], ["상태", "status"], ["등급", "tier"],
+    ];
+
+    function show(customer) {
+      const detail = document.getElementById("detail");
+      detail.replaceChildren();
+      for (const [label, key] of fields) {
+        const term = document.createElement("dt");
+        term.textContent = label;
+        const value = document.createElement("dd");
+        value.textContent = customer[key] ?? "";
+        detail.append(term, value);
+      }
+    }
+
+    api(`/api/customers/${encodeURIComponent(id)}`)
+      .then(show)
+      .catch((error) => { document.getElementById("message").textContent = error.message; });
+
+    document.getElementById("contact-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = new FormData(event.target);
+      try {
+        show(await api(`/api/customers/${encodeURIComponent(id)}/contact`, {
+          method: "PUT",
+          body: JSON.stringify({ email: form.get("email"), phoneNumber: form.get("phoneNumber") }),
+        }));
+        document.getElementById("message").textContent = "저장했습니다.";
+      } catch (error) {
+        document.getElementById("message").textContent = error.message;
+      }
+    });
+  </script>
+</body>
+</html>
